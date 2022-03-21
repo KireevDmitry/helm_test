@@ -27,6 +27,7 @@ jobs:
           wget https://grafana.com/api/dashboards/9628/revisions/6/download -O charts/documentserver/sources/metrics/dashboard-postgresql.json
           wget https://grafana.com/api/dashboards/9614/revisions/1/download -O charts/documentserver/sources/metrics/dashboard-nginx-ingress.json
       - name: Commit & Push changes
-        uses: actions-js/push@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git add -A
+          git commit -m 'automated commit'
+          git push

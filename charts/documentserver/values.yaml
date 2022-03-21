@@ -19,7 +19,7 @@ metrics:
   enabled: false
 
 example:
-  enabled: true
+  enabled: false
   containerImage: onlyoffice/docs-example:6.4.2.6
 
 docservice:
