@@ -20,5 +20,13 @@ jobs:
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
       - name: load
         run: |
-          echo $(ls)
-          
+          wget https://grafana.com/api/dashboards/1860/revisions/22/download -O charts/documentserver/sources/metrics/dashboard-node-exporter.json
+          wget https://grafana.com/api/dashboards/8588/revisions/1/download -O charts/documentserver/sources/metrics/dashboard-deployment.json
+          wget https://grafana.com/api/dashboards/11835/revisions/1/download -O charts/documentserver/sources/metrics/dashboard-redis.json
+          wget https://grafana.com/api/dashboards/10991/revisions/8/download -O charts/documentserver/sources/metrics/dashboard-rabbitmq.json
+          wget https://grafana.com/api/dashboards/9628/revisions/6/download -O charts/documentserver/sources/metrics/dashboard-postgresql.json
+          wget https://grafana.com/api/dashboards/9614/revisions/1/download -O charts/documentserver/sources/metrics/dashboard-nginx-ingress.json
+      - name: Commit & Push changes
+        uses: actions-js/push@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
