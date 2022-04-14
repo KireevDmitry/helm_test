@@ -9,7 +9,7 @@ entries:
     name: documentserver
     type: application
     urls:
-    - documentserver-22.4.13.tgz
+    - https://github.com/KireevDmitry/helm_test/releases/download/documentserver-22.4.13/documentserver-22.4.13.tgz
     version: 22.4.13
   - apiVersion: v1
     appVersion: 6.4.2
