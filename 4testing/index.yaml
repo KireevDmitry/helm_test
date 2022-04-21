@@ -9,6 +9,6 @@ entries:
     name: documentserver
     type: application
     urls:
-    - https://github.com/ONLYOFFICE/Kubernetes-Docs/releases/download/documentserver-22.4.19/documentserver-22.4.19.tgz
+    - https://github.com/KireevDmitry/helm_test/releases/download/documentserver-22.4.19/documentserver-22.4.19.tgz
     version: 22.4.19
 generated: "2022-04-19T09:10:17.273905495-04:00"
