@@ -9,6 +9,6 @@ entries:
     name: documentserver
     type: application
     urls:
-    - documentserver-22.4.19.tgz
+    - https://github.com/KireevDmitry/helm_test/releases/download/documentserver-22.4.19/documentserver-22.4.19.tgz
     version: 22.4.19
 generated: "2022-04-26T11:11:03.664670531-04:00"
