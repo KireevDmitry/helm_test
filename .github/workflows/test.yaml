@@ -1,5 +1,5 @@
 ---
-name: Release Chart on S3 repo
+name: Test
 
 on:    
   workflow_dispatch
