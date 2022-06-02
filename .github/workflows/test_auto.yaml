@@ -21,10 +21,9 @@ jobs:
           if [[ "$LATEST_VERSION" == *"$NEW_VERSION"* ]]; then
             RC=${STR: -1}
             let "RC+=1"
-            LATEST_VERSION=$(echo $LATEST_VERSION | sed 's/.$//')$RC
-            sed 's/\(version:\).*/\1 '$LATEST_VERSION'/' -i charts/documentserver/Chart.yaml
           else
-            NEW_VERSION=$(echo $NEW_VERSION)-rc$RC
-            sed 's/\(version:\).*/\1 '$NEW_VERSION'/' -i charts/documentserver/Chart.yaml
+            RC='1'
           fi
+          NEW_VERSION=$(echo $NEW_VERSION)-rc$RC
+          sed 's/\(version:\).*/\1 '$NEW_VERSION'/' -i charts/documentserver/Chart.yaml
           cat charts/documentserver/Chart.yaml
