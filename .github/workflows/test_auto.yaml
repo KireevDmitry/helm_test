@@ -18,3 +18,13 @@ jobs:
           NEW_VERSION=$(awk '/version:/ {print $2;}' charts/documentserver/Chart.yaml)
           echo $LATEST_VERSION
           echo $NEW_VERSION
+          if [[ "$LATEST_VERSION" == *"$NEW_VERSION"* ]]; then
+            RC=${STR: -1}
+            let "RC+=1"
+            LATEST_VERSION=$(echo $LATEST_VERSION | sed 's/.$//')$RC
+            sed 's/\(version:\).*/\1 '$LATEST_VERSION'/' -i charts/documentserver/Chart.yaml
+          else
+            NEW_VERSION=$(echo $NEW_VERSION)-rc$RC
+            sed 's/\(version:\).*/\1 '$LATEST_VERSION'/' -i charts/documentserver/Chart.yaml
+          fi
+          cat charts/documentserver/Chart.yaml
