@@ -25,6 +25,6 @@ jobs:
             sed 's/\(version:\).*/\1 '$LATEST_VERSION'/' -i charts/documentserver/Chart.yaml
           else
             NEW_VERSION=$(echo $NEW_VERSION)-rc$RC
-            sed 's/\(version:\).*/\1 '$LATEST_VERSION'/' -i charts/documentserver/Chart.yaml
+            sed 's/\(version:\).*/\1 '$NEW_VERSION'/' -i charts/documentserver/Chart.yaml
           fi
           cat charts/documentserver/Chart.yaml
