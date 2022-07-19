@@ -1,0 +1,163 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docservice
+  labels:
+    app: docservice
+spec:
+  {{ if not .Values.docservice.autoscaling.enabled }}
+  replicas: {{ .Values.docservice.replicas }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app: docservice
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: docservice
+    {{- if .Values.docservice.podAnnotations }}
+      annotations:
+        {{- range $key, $value := .Values.docservice.podAnnotations }}
+        {{ $key }}: {{ tpl $value $ }}
+        {{- end }}
+    {{- end }}
+    spec:
+      {{ if .Values.securityContext.enabled }}
+      securityContext:
+        runAsUser: {{ .Values.securityContext.docservice.runAsUser }}
+        runAsGroup: {{ .Values.securityContext.docservice.runAsGroup }}
+      {{ end }}
+      # topologySpreadConstraints:
+      # - maxSkew: 1
+        # topologyKey: doks.digitalocean.com/node-pool
+        # whenUnsatisfiable: DoNotSchedule
+        # labelSelector:
+          # matchLabels:
+            # app: docservice
+      affinity:
+        podAntiAffinity:
+        {{- if eq .Values.antiAffinity.type "soft" }}
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - docservice
+              topologyKey: {{ .Values.antiAffinity.topologyKey }}
+            weight: {{ .Values.antiAffinity.weight }}
+        {{- else if eq .Values.antiAffinity.type "hard" }}
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - docservice
+            topologyKey: {{ .Values.antiAffinity.topologyKey }}
+        {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector: {{ toYaml .Values.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations: {{ toYaml .Values.tolerations | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: ds-files
+          persistentVolumeClaim:
+            claimName: {{ template "ds.pvc.name" . }}
+        - name: ds-license
+          {{- if .Values.license.existingClaim }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.license.existingClaim }}
+          {{- else }}
+          secret:
+            secretName: {{ template "ds.license.secretName" . }}
+          {{- end }}
+        {{ if .Values.extraConf.configMap }}
+        - name: custom-file
+          configMap:
+            name: {{ .Values.extraConf.configMap }}
+        {{ end }}
+        {{ if .Values.extraThemes.configMap }}
+        - name: custom-themes
+          configMap:
+            name: {{ .Values.extraThemes.configMap }}
+        {{ end }}
+      containers:
+        - name: proxy
+          image: {{ .Values.proxy.proxyContainerImage }}
+          imagePullPolicy: {{ .Values.proxy.imagePullPolicy }}
+          ports:
+            - containerPort: 8888
+          {{ if .Values.proxy.livenessProbeEnabled }}
+          livenessProbe: {{ toYaml .Values.proxy.livenessProbe | nindent 14 }}
+          {{ end }}
+          {{ if .Values.proxy.startupProbeEnabled }}
+          startupProbe: {{ toYaml .Values.proxy.startupProbe | nindent 14 }}
+          {{ end }}
+          resources: {{ toYaml .Values.proxy.resources | nindent 12 }}
+          envFrom:
+          - configMapRef:
+              name: documentserver
+          volumeMounts:
+          - name: ds-files
+            mountPath: /var/lib/{{ .Values.product.name }}/documentserver/App_Data/cache/files
+          {{ if .Values.extraThemes.configMap }}
+          - name: custom-themes
+            mountPath: /var/www/{{ .Values.product.name }}/documentserver/web-apps/apps/common/main/resources/themes/{{ .Values.extraThemes.filename }}
+            subPath: {{ .Values.extraThemes.filename }}
+          {{ end }}
+
+        - name: docservice
+          image: {{ .Values.docservice.containerImage }}
+          imagePullPolicy: {{ .Values.docservice.imagePullPolicy }}
+          ports:
+            - containerPort: 8000
+          {{ if .Values.docservice.readinessProbeEnabled }}
+          readinessProbe: {{ toYaml .Values.docservice.readinessProbe | nindent 14 }}
+          {{ end }}
+          {{ if .Values.docservice.livenessProbeEnabled }}
+          livenessProbe: {{ toYaml .Values.docservice.livenessProbe | nindent 14 }}
+          {{ end }}
+          {{ if .Values.docservice.startupProbeEnabled }}
+          startupProbe: {{ toYaml .Values.docservice.startupProbe | nindent 14 }}
+          {{ end }}
+          resources: {{ toYaml .Values.docservice.resources | nindent 12 }}
+          env:
+          - name: DB_PWD
+            valueFrom:
+              secretKeyRef:
+                name: {{ template "ds.postgresql.secretName" . }}
+                key: {{ .Values.connections.dbSecretKeyName }}
+          - name: AMQP_PWD
+            valueFrom:
+              secretKeyRef:
+                name: {{ template "ds.rabbitmq.secretName" . }}
+                key: {{ .Values.connections.amqpSecretKeyName }}
+          envFrom:
+          - secretRef:
+              name: {{ template "ds.jwt.secretName" . }}
+          - configMapRef:
+              name: documentserver
+          volumeMounts:
+          - name: ds-files
+            mountPath: /var/lib/{{ .Values.product.name }}/documentserver/App_Data/cache/files
+          - name: ds-license
+            mountPath: /var/www/{{ .Values.product.name }}/Data
+            {{- if not .Values.license.existingClaim }}
+            readOnly: true
+            {{- end }}
+          {{ if .Values.extraConf.configMap }}
+          - name: custom-file
+            mountPath: /etc/{{ .Values.product.name }}/documentserver/{{ .Values.extraConf.filename }}
+            subPath: {{ .Values.extraConf.filename }}
+          {{ end }}
+          {{ if .Values.extraThemes.configMap }}
+          - name: custom-themes
+            mountPath: /var/www/{{ .Values.product.name }}/documentserver/web-apps/apps/common/main/resources/themes/{{ .Values.extraThemes.filename }}
+            subPath: {{ .Values.extraThemes.filename }}
+          {{ end }}

@@ -1,0 +1,339 @@
+product:
+  name: onlyoffice
+
+connections:
+  dbHost: postgresql
+  dbUser: postgres
+  dbPort: "5432"
+  dbName: postgres
+  dbExistingSecret: postgresql
+  dbSecretKeyName: postgres-password
+  dbPassword: ""
+  redisHost: redis-master
+  redisPort: "6379"
+  amqpType: rabbitmq
+  amqpHost: rabbitmq
+  amqpPort: "5672"
+  amqpVhost: "/"
+  amqpUser: user
+  amqpProto: amqp
+  amqpExistingSecret: rabbitmq
+  amqpSecretKeyName: rabbitmq-password
+  amqpPassword: ""
+
+persistence:
+  existingClaim: ""
+  storageClass: "nfs"
+  size: 8Gi
+
+license:
+  existingSecret: ""
+  existingClaim: ""
+
+log:
+  level: WARN
+  type: pattern
+  pattern: "[%d] [%p] %c - %.10000m"
+
+metrics:
+  enabled: false
+  host: statsd-exporter-prometheus-statsd-exporter
+  port: "8125"
+  prefix: ds.
+
+example:
+  enabled: false
+  podAnnotations:
+    rollme: "{{ randAlphaNum 5 | quote }}"
+  containerImage: onlyoffice/docs-example:7.1.1-1
+  imagePullPolicy: IfNotPresent
+  dsUrl: /
+  resources:
+    ##Example:
+    ##requests:
+    ##  memory: "128Mi"
+    ##  cpu: "100m"
+    requests: {}
+    ##limits:
+    ##  memory: "128Mi"
+    ##  cpu: "250m"
+    limits: {}
+
+extraConf:
+  configMap: ""
+  filename: local.json
+
+extraThemes:
+  configMap: ""
+  filename: custom-themes.json
+
+antiAffinity:
+  type: "soft"
+  topologyKey: kubernetes.io/hostname
+  weight: "100"
+
+nodeSelector: {}
+
+tolerations: []
+
+docservice:
+  podAnnotations:
+    rollme: "{{ randAlphaNum 5 | quote }}"
+  replicas: 2
+  readinessProbeEnabled: true
+  readinessProbe:
+    failureThreshold: 2
+    httpGet:
+      path: /index.html
+      port: 8000
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 3
+  livenessProbeEnabled: true
+  livenessProbe:
+    failureThreshold: 5
+    httpGet:
+      path: /index.html
+      port: 8000
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 3
+  startupProbeEnabled: true
+  startupProbe:
+    httpGet:
+      path: /index.html
+      port: 8000
+    failureThreshold: 30
+    periodSeconds: 10
+  containerImage: onlyoffice/docs-docservice-de:7.1.1-1
+  imagePullPolicy: IfNotPresent
+  resources:
+    ##Example:
+    ##requests:
+    ##  memory: "256Mi"
+    ##  cpu: "100m"
+    requests: {}
+    ##limits:
+    ##  memory: "2Gi"
+    ##  cpu: "1000m"
+    limits: {}
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 4
+    targetCPU:
+      enabled: true
+      utilizationPercentage: 70
+    targetMemory:
+      enabled: false
+      utilizationPercentage: 70
+    ##Example:
+    ##customMetricsType:
+    ##  - type: Object
+    ##    object:
+    ##      metric:
+    ##        name: requests-per-second
+    ##      describedObject:
+    ##        apiVersion: networking.k8s.io/v1
+    ##        kind: Ingress
+    ##        name: main-route
+    ##      target:
+    ##        type: Value
+    ##        value: 2k
+    customMetricsType: []
+    ##Example:
+    ##behavior:
+    ##  scaleDown:
+    ##    stabilizationWindowSeconds: 300
+    ##    policies:
+    ##    - type: Pods
+    ##      value: 4
+    ##      periodSeconds: 60
+    ##  scaleUp:
+    ##    stabilizationWindowSeconds: 0
+    ##    policies:
+    ##    - type: Percent
+    ##      value: 70
+    ##      periodSeconds: 15
+    ##    selectPolicy: Max
+    behavior: {}
+
+proxy:
+  gzipProxied: "off"
+  livenessProbeEnabled: true
+  livenessProbe:
+    failureThreshold: 3
+    httpGet:
+      path: /index.html
+      port: 8888
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 3
+  startupProbeEnabled: true
+  startupProbe:
+    httpGet:
+      path: /index.html
+      port: 8888
+    failureThreshold: 30
+    periodSeconds: 10
+  proxyContainerImage: onlyoffice/docs-proxy-de:7.1.1-1
+  imagePullPolicy: IfNotPresent
+  resources:
+    ##Example:
+    ##requests:
+    ##  memory: "256Mi"
+    ##  cpu: "100m"
+    requests: {}
+    ##limits:
+    ##  memory: "2Gi"
+    ##  cpu: "1000m"
+    limits: {}
+
+converter:
+  podAnnotations:
+    rollme: "{{ randAlphaNum 5 | quote }}"
+  replicas: 2
+  containerImage: onlyoffice/docs-converter-de:7.1.1-1
+  imagePullPolicy: IfNotPresent
+  resources:
+    ##Example:
+    ##requests:
+    ##  memory: "256Mi"
+    ##  cpu: "200m"
+    requests: {}
+    ##limits:
+    ##  memory: "2Gi"
+    ##  cpu: "1000m"
+    limits: {}
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 16
+    targetCPU:
+      enabled: true
+      utilizationPercentage: 70
+    targetMemory:
+      enabled: false
+      utilizationPercentage: 70
+    ##Example:
+    ##customMetricsType:
+    ##  - type: Pods
+    ##    pods:
+    ##      metric:
+    ##        name: packets-per-second
+    ##      target:
+    ##        type: AverageValue
+    ##        averageValue: 1k
+    customMetricsType: []
+    ##Example:
+    ##behavior:
+    ##  scaleDown:
+    ##    stabilizationWindowSeconds: 300
+    ##    policies:
+    ##    - type: Percent
+    ##      value: 10
+    ##      periodSeconds: 60
+    ##  scaleUp:
+    ##    stabilizationWindowSeconds: 0
+    ##    policies:
+    ##    - type: Percent
+    ##      value: 10
+    ##      periodSeconds: 15
+    ##    - type: Pods
+    ##      value: 2
+    ##      periodSeconds: 15
+    ##    selectPolicy: Max
+    behavior: {}
+
+jwt:
+  enabled: true
+  secret: "MYSECRET"
+  header: "Authorization"
+  inBody: false
+  ##Example:
+  ##inbox:
+  ##  enabled: true
+  ##  secret: "MYSECRET"
+  ##  header: "Authorization"
+  inbox: {}
+  ##outbox:
+  ##  enabled: true
+  ##  secret: "MYSECRET"
+  ##  header: "Authorization"
+  outbox: {}
+  existingSecret: ""
+
+service:
+  existing: ""
+  annotations: {}
+  type: ClusterIP
+  port: 8888
+
+ingress:
+  enabled: false
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: 100m
+  host: ""
+  ssl:
+    enabled: false
+    secret: tls
+
+grafana_ingress:
+  enabled: false
+
+securityContext:
+  enabled: false
+  converter:
+    runAsUser: 101
+    runAsGroup: 101
+  docservice:
+    runAsUser: 101
+    runAsGroup: 101
+  example:
+    runAsUser: 1001
+    runAsGroup: 1001
+
+privateCluster: false
+
+upgrade:
+  job:
+    image:
+      repository: postgres
+      tag: latest
+      pullPolicy: IfNotPresent
+  existingConfigmap:
+    tblRemove:
+      name: remove-db-scripts
+      keyName: removetbl.sql
+    tblCreate:
+      name: init-db-scripts
+      keyName: createdb.sql
+    dsStop: ""
+
+rollback:
+  job:
+    image:
+      repository: postgres
+      tag: latest
+      pullPolicy: IfNotPresent
+  existingConfigmap:
+    tblRemove:
+      name: remove-db-scripts
+      keyName: removetbl.sql
+    tblCreate:
+      name: init-db-scripts
+      keyName: createdb.sql
+    dsStop: ""
+
+delete:
+  job:
+    image:
+      repository: postgres
+      tag: latest
+      pullPolicy: IfNotPresent
+  existingConfigmap:
+    tblRemove:
+      name: remove-db-scripts
+      keyName: removetbl.sql
+    dsStop: ""
