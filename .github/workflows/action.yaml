@@ -31,6 +31,6 @@ jobs:
           helm package Docs
           helm package documentserver
           helm package Kubernetes-Docs
-          curl -u admin:123456789 http://142.93.182.196:8081/repository/personal/ --upload-file kubernetes-docs-2.2.2.tgz -v
-          curl -u admin:123456789 http://142.93.182.196:8081/repository/personal/ --upload-file documentserver-4.4.4.tgz -v
-          curl -u admin:123456789 http://142.93.182.196:8081/repository/personal/ --upload-file docs-1.1.1.tgz -v
+          curl -u admin:123456789 http://142.93.182.196:8081/repository/personal/ --upload-file kubernetes-docs-*.tgz -v
+          curl -u admin:123456789 http://142.93.182.196:8081/repository/personal/ --upload-file documentserver-*.tgz -v
+          curl -u admin:123456789 http://142.93.182.196:8081/repository/personal/ --upload-file docs-*.tgz -v
