@@ -33,5 +33,5 @@ jobs:
           ##for var in $(ls -d */ | cut -f1 -d'/')
           do
           helm package $var
-          curl -u "${{ secrets.NEXUS_LOGIN }}":"${{ secrets.NEXUS_PWD }}" "${{ secrets.NEXUS_url }} --upload-file $var-*.tgz -v
+          curl -u "${{ secrets.NEXUS_LOGIN }}":"${{ secrets.NEXUS_PWD }}" "${{ secrets.NEXUS_url }}" --upload-file $var-*.tgz -v
           done
