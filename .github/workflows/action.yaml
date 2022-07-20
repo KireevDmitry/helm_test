@@ -28,9 +28,10 @@ jobs:
 
       - name: Push charts
         run: |
-          helm package Docs
-          helm package documentserver
-          helm package Kubernetes-Docs
-          curl -u admin:123456789 http://142.93.182.196:8081/repository/personal/ --upload-file kubernetes-docs-*.tgz -v
-          curl -u admin:123456789 http://142.93.182.196:8081/repository/personal/ --upload-file documentserver-*.tgz -v
-          curl -u admin:123456789 http://142.93.182.196:8081/repository/personal/ --upload-file docs-*.tgz -v
+          CHARTS=(kubernetes-docs documentserver docs)
+          for var in ${CHARTS[*]}
+          ##for var in $(ls -d */ | cut -f1 -d'/')
+          do
+          helm package $var
+          curl -u "$NEXUS_LOGIN":"$NEXUS_PWD" http://142.93.182.196:8081/repository/personal/ --upload-file $var-*.tgz -v
+          done
