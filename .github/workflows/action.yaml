@@ -28,7 +28,7 @@ jobs:
 
       - name: Push charts
         run: |
-          CHARTS=(kubernetes-docs documentserver docs)
+          CHARTS=(kubernetes-docs)
           for var in ${CHARTS[*]}
           ##for var in $(ls -d */ | cut -f1 -d'/')
           do
